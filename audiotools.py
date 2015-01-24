@@ -102,3 +102,25 @@ def read(filename, samplerate=None, channels=None):
         os.remove(tmpfile)
 
     return x.astype(np.float) / np.power(2.0, 15.0), samplerate
+
+
+def write(filename, data, samplerate):
+    """Write a soundfile to disk.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the output sound file.
+    data : np.ndarray
+        Sound signal to write to disk.
+    samplerate : scalar
+        Samplerate for the given sound signal.
+    """
+    data = (data * np.power(2, 15)).astype(np.int16)
+    if not filename.endswith(".wav"):
+        fid, tmpfile = tempfile.mkstemp(suffix=".wav")
+        WF.write(tmpfile, samplerate, data)
+        convert(tmpfile, filename)
+        os.remove(tmpfile)
+    else:
+        WF.write(filename, samplerate, data)
