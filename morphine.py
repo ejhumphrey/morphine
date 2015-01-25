@@ -1,11 +1,10 @@
 import numpy as np
 import random
+import time
 
-from scipy.spatial.distance import cdist
-from scipy.signal import lfilter
 from sklearn.neighbors import kneighbors_graph
 
-from audiotools import read, write
+from audiotools import read
 
 
 def randwalk(num_points, ndim, step_scale=0.25, init_points=None):
@@ -53,10 +52,10 @@ def overlap_and_add(grains, window=None, overlap=0.5):
     framesize, channels = grains[0].shape
 
     window = np.hanning(framesize).reshape(-1, 1) if window is None else window
-    y_out = np.zeros([framesize * ((len(grains) - 1) * overlap + 1),
+    y_out = np.zeros([int(framesize * ((len(grains) - 1) * overlap + 1)),
                       channels])
     for idx, x_n in enumerate(grains):
-        i0 = idx * framesize * (1.0 - overlap)
+        i0 = int(idx * framesize * (1.0 - overlap))
         i1 = i0 + framesize
         y_out[i0:i1, :] += window * x_n
     return y_out
@@ -104,3 +103,15 @@ def rand_acyclic_walk(connections, num_points, start_idx=None):
         start_idx = connects[start_idx].pop(row_idx)
 
     return path
+
+
+def extract_grains(files, time_points, samplerate=44100, duration=0.5):
+    grains = []
+    framesize = int(samplerate * duration)
+    for idx, (f, t) in enumerate(zip(files, time_points)):
+        print "[{0}] {1:4d} {2}".format(time.asctime(), idx, f)
+        x = read(f, samplerate=samplerate)[0]
+        idx = int((t - duration / 2) * samplerate)
+        idx = 0 if idx < 0 else idx
+        grains.append(x[idx:idx + framesize, :])
+    return grains

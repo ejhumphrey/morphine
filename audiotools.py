@@ -24,8 +24,9 @@ def sox(args):
     else:
         args[0] = "sox"
 
-    process_handle = subprocess.Popen(args, stderr=subprocess.PIPE)
-    return process_handle.wait() == 0
+    os.system(" ".join(args))
+    # process_handle = subprocess.Popen(args, stderr=subprocess.PIPE)
+    # return process_handle.wait() == 0
 
 
 def convert(input_file, output_file,
@@ -93,11 +94,11 @@ def read(filename, samplerate=None, channels=None):
         assert x.shape[1] == channels or channels is None
         assert x.dtype == 'int16'
     except:
-        fid, tmpfile = tempfile.mkstemp(suffix=".wav")
-        convert(
-            filename, tmpfile, samplerate=samplerate,
-            channels=channels, bytedepth=2)
-        fs, x = WF.read(tmpfile)
+        with tempfile.mkstemp(suffix=".wav") as (fid, tmpfile):
+            convert(filename, tmpfile, samplerate=samplerate,
+                    channels=channels, bytedepth=2)
+            fs, x = WF.read(tmpfile)
+            os.remove(tmpfile)
         x = x.reshape(-1, 1) if x.ndim == 1 else x
         os.remove(tmpfile)
 
